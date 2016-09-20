@@ -1,0 +1,16 @@
+<sld_project_info>
+  <project>
+    <hash md5_digest_80b="cac89adff7e1de6f2621"/>
+  </project>
+  <file_info>
+    <file device="10M02DCV36C8G" path="c02_test_top.sof" usercode="0xFFFFFFFF"/>
+  </file_info>
+  <sld_infos>
+    <sld_info hpath="testmem_core:u0" name="u0">
+      <assignment_values>
+        <assignment_value text="QSYS_NAME testmem_core HAS_SOPCINFO 1 GENERATION_ID 1474363192"/>
+      </assignment_values>
+      <parameters/>
+    </sld_info>
+  </sld_infos>
+</sld_project_info>

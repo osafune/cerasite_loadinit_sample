@@ -1,0 +1,16 @@
+Analysis & Synthesis Status : Successful - Tue Sep 20 18:20:23 2016
+Quartus Prime Version : 16.0.2 Build 222 07/20/2016 SJ Lite Edition
+Revision Name : c02_test_top
+Top-level Entity Name : c02_test_top
+Family : MAX 10
+Total logic elements : 1,088
+    Total combinational functions : 976
+    Dedicated logic registers : 603
+Total registers : 603
+Total pins : 5
+Total virtual pins : 0
+Total memory bits : 40,960
+Embedded Multiplier 9-bit elements : 0
+Total PLLs : 0
+UFM blocks : 1
+ADC blocks : 0

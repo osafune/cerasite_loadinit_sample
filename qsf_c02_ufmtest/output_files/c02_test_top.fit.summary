@@ -1,0 +1,18 @@
+Fitter Status : Successful - Tue Sep 20 18:20:31 2016
+Quartus Prime Version : 16.0.2 Build 222 07/20/2016 SJ Lite Edition
+Revision Name : c02_test_top
+Top-level Entity Name : c02_test_top
+Family : MAX 10
+Device : 10M02DCV36C8G
+Timing Models : Final
+Total logic elements : 1,058 / 2,304 ( 46 % )
+    Total combinational functions : 981 / 2,304 ( 43 % )
+    Dedicated logic registers : 571 / 2,304 ( 25 % )
+Total registers : 571
+Total pins : 5 / 27 ( 19 % )
+Total virtual pins : 0
+Total memory bits : 40,960 / 110,592 ( 37 % )
+Embedded Multiplier 9-bit elements : 0 / 32 ( 0 % )
+Total PLLs : 0 / 1 ( 0 % )
+UFM blocks : 1 / 1 ( 100 % )
+ADC blocks : 0
