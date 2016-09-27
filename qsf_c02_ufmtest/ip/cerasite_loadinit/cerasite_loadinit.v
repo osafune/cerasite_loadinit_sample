@@ -3,7 +3,7 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2016/09/19 -> 2016/09/19
-//   UPDATE :
+//   UPDATE : 2016/09/28
 //
 // ===================================================================
 // *******************************************************************
@@ -36,17 +36,23 @@
 //
 // ・差分データフレーム（１つ前との差分が+127～-128の範囲におさまるワード列）
 //
-// +0   : フレームヘッダ / bit31:0, bit30:0, bit29-17:reserve(0), bit16-0:格納ワード数(1～65536) 
+// +0   : フレームヘッダ / bit31-29:000, bit28-17:reserve(0), bit16-0:格納ワード数(1～65536) 
 // +4   : 初期値 / bit31-0:初期値 
 // +8～ : 増分値 / bit7-0:ワード+1の増分値(符号付き8bit), bit15-8:ワード+2の増分値(〃), bit23-16:ワード+3, bit31-24:ワード+4
 //        ※増分値データは必ず32bit境界に配置され、余るバイトは読み捨てられる
 //
 //
-// ・即値データフレーム（32bitのワード列）
+// ・即値データフレーム（32bitの即値ワード列）
 //
-// +0   : フレームヘッダ / bit31:0, bit30:1, bit29-17:reserve(0), bit16-0:格納ワード数(1～65536) 
+// +0   : フレームヘッダ / bit31-29:010, bit28-17:reserve(0), bit16-0:格納ワード数(1～65536) 
 // +4～ : 即値ワード / bit31-0:データ列 
-// 
+//
+//
+// ・リピートデータフレーム（32bitのワードを繰り返す）
+//
+// +0   : フレームヘッダ / bit31-29:011, bit28-17:reserve(0), bit16-0:リピート数(1～65536) 
+// +4   : リピートワード / bit31-0:データ列 
+//
 //
 // ・終了データフレーム（初期化データの終了を示す）
 //
@@ -57,15 +63,6 @@
 `timescale 1ns / 100ps
 
 module cerasite_loadinit (
-/*
-	output			test_ufm_clk,
-	output [13:0]	test_ufm_address,
-	output			test_ufm_read,
-	input  [31:0]	test_ufm_readdata,
-	input			test_ufm_readdatavalid,
-	input			test_ufm_waitres,
-*/
-
 	// Interface: clk
 	input			clock,			// up to 58MHz
 	input			reset,
@@ -86,11 +83,18 @@ module cerasite_loadinit (
 	localparam	STATE_START		= 5'd0,
 				STATE_LOADCOUNT	= 5'd1,
 				STATE_LOADINIT	= 5'd2,
-				STATE_ADD0		= 5'd3,
-				STATE_ADD1		= 5'd4,
-				STATE_ADD2		= 5'd5,
-				STATE_ADD3		= 5'd6,
-				STATE_DONE		= 5'd7;
+				STATE_REPEAT	= 5'd3,
+				STATE_ADD0		= 5'd4,
+				STATE_ADD1		= 5'd5,
+				STATE_ADD2		= 5'd6,
+				STATE_ADD3		= 5'd7,
+				STATE_DONE		= 5'd8;
+
+	localparam	STATE_UFM_IDLE	= 5'd0,
+				STATE_UFM_READ	= 5'd1,
+				STATE_UFM_DATA	= 5'd2,
+				STATE_UFM_DONE	= 5'd3;
+
 
 
 /* ※以降のパラメータ宣言は禁止※ */
@@ -105,45 +109,36 @@ module cerasite_loadinit (
 	reg  [4:0]		state_reg;
 	reg				readreq_reg;
 	reg				imm32_reg;
+	reg				rep_reg;
 	reg  [11:0]		wordaddr_reg;
 	reg  [15:0]		datacount_reg;
 	reg  [31:0]		data_reg;
 	reg				datavalid_reg;
 
 	wire [13:0]		avs_address_sig;
-	wire			avs_waitrequest_sig;
 	wire			avs_read_sig;
+	wire			avs_waitrequest_sig;
 	wire [31:0]		avs_readdata_sig;
-
 
 	reg  [2:0]		divclock_reg;
 	wire			ufm_clk_sig /* synthesis keep = 1 */;			// 分周クロックネット名を保持 
-	wire			ufm_clkena_sig;
+	reg				avs_readreq_reg;
+	reg				avs_waitres_reg;
+	reg  [4:0]		ufmstate_reg;
+	reg  [31:0]		readdata_reg;
 
 	wire [13:2]		ufm_address_sig;
-	reg				ufm_waitreq_reg;
+	wire			ufm_read_sig;
 	wire			ufm_waitreq_sig;
-	reg				ufm_read_reg;
-	wire			ufm_readreq_sig;
-	reg				ufm_datawait_reg;
-	reg  [31:0]		ufm_readdata_reg;
 	wire [31:0]		ufm_readdata_sig;
 	wire			ufm_readdatavalid_sig;
-	wire			ufm_waitres_sig;
-
 
 
 /* ※以降のwire、reg宣言は禁止※ */
 
 /* ===== テスト記述 ============== */
-/*
-	assign test_ufm_clk = ufm_clk_sig;
-	assign test_ufm_address = {ufm_address_sig, 2'b00};
-	assign test_ufm_read = ufm_read_reg;
-	assign ufm_readdata_sig = test_ufm_readdata;
-	assign ufm_readdatavalid_sig = test_ufm_readdatavalid;
-	assign ufm_waitres_sig = test_ufm_waitres;
-*/
+
+
 
 /* ===== モジュール構造記述 ============== */
 
@@ -157,6 +152,7 @@ module cerasite_loadinit (
 			state_reg <= STATE_START;
 			readreq_reg <= 1'b0;
 			imm32_reg <= 1'b0;
+			rep_reg <= 1'b0;
 			datavalid_reg <= 1'b0;
 		end
 		else begin
@@ -182,6 +178,7 @@ module cerasite_loadinit (
 
 					datacount_reg <= avs_readdata_sig[15:0];
 					imm32_reg <= avs_readdata_sig[30];
+					rep_reg <= avs_readdata_sig[29];
 				end
 				else begin
 					datavalid_reg <= 1'b0;
@@ -200,7 +197,13 @@ module cerasite_loadinit (
 							state_reg <= STATE_ADD0;
 						end
 						else begin
-							state_reg <= STATE_LOADINIT;
+							if (rep_reg == 1'b0) begin
+								state_reg <= STATE_LOADINIT;
+							end
+							else begin
+								state_reg <= STATE_REPEAT;
+								readreq_reg <= 1'b0;
+							end
 						end
 					end
 
@@ -211,6 +214,15 @@ module cerasite_loadinit (
 				else begin
 					datavalid_reg <= 1'b0;
 				end
+			end
+
+			STATE_REPEAT : begin
+				if (datacount_reg == 16'd1) begin
+					state_reg <= STATE_LOADCOUNT;
+					readreq_reg <= 1'b1;
+				end
+
+				datacount_reg <= datacount_reg - 1'd1;
 			end
 
 			STATE_ADD0 : begin
@@ -292,15 +304,9 @@ module cerasite_loadinit (
 
 	/***** UFMアクセスモジュール(10M02用) *****/
 
-	// 制御信号 
-
-	assign ufm_address_sig = avs_address_sig[13:2];
-	assign ufm_readreq_sig = avs_read_sig;
-	assign avs_readdata_sig = ufm_readdata_reg;
-	assign avs_waitrequest_sig = ufm_waitreq_sig;
-
-
 	// 8分周クロックを生成 
+
+	assign ufm_clk_sig = divclock_reg[2];
 
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
@@ -311,61 +317,89 @@ module cerasite_loadinit (
 		end
 	end
 
-	assign ufm_clk_sig = divclock_reg[2];
-	assign ufm_clkena_sig = (divclock_reg == 3'b000)? 1'b1 : 1'b0;	// クロック周期の中間地点をデータウィンドウにする 
 
+	// AVS側制御信号(Normally wait) 
 
-	// UFMリードコントローラ 
+	assign avs_waitrequest_sig = (avs_read_sig)? avs_waitres_reg : 1'b0;
+	assign avs_readdata_sig = readdata_reg;
 
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
-			ufm_read_reg <= 1'b0;
-			ufm_datawait_reg <= 1'b0;
-			ufm_waitreq_reg <= 1'b0;
+			avs_readreq_reg <= 1'b0;
+			avs_waitres_reg <= 1'b1;
 		end
 		else begin
-			if (ufm_clkena_sig) begin
-				if (ufm_read_reg && !ufm_waitres_sig) begin
-					ufm_read_reg <= 1'b0;
-				end
-				else if (ufm_readreq_sig && !ufm_datawait_reg) begin
-					ufm_read_reg <= 1'b1;
-				end
-
-				if (ufm_read_reg && !ufm_waitres_sig) begin
-					ufm_datawait_reg <= 1'b1;
-				end
-				else if (ufm_readdatavalid_sig) begin
-					ufm_datawait_reg <= 1'b0;
-				end
+			if (!avs_readreq_reg && ufmstate_reg == STATE_UFM_IDLE) begin
+				avs_readreq_reg <= avs_read_sig;
+			end
+			else if (avs_readreq_reg && ufmstate_reg == STATE_UFM_DONE) begin
+				avs_readreq_reg <= 1'b0;
 			end
 
-			if (!ufm_waitreq_reg) begin
-				ufm_waitreq_reg <= 1'b1;
+			if (avs_readreq_reg && ufmstate_reg == STATE_UFM_DONE) begin
+				avs_waitres_reg <= 1'b0;
 			end
 			else begin
-				if (ufm_clkena_sig && ufm_readdatavalid_sig) begin
-					ufm_readdata_reg <= ufm_readdata_sig;
-					ufm_waitreq_reg <= 1'b0;
-				end
+				avs_waitres_reg <= 1'b1;
 			end
 		end
 	end
 
-	assign ufm_waitreq_sig = (ufm_readreq_sig)? ufm_waitreq_reg : 1'b0;
+
+	// UFM側リードコントローラ 
+
+	assign ufm_address_sig = avs_address_sig[13:2];
+	assign ufm_read_sig = (ufmstate_reg == STATE_UFM_READ)? 1'b1 : 1'b0;
+
+	always @(posedge ufm_clk_sig or posedge reset_sig) begin
+		if (reset_sig) begin
+			ufmstate_reg <= STATE_UFM_IDLE;
+		end
+		else begin
+			case (ufmstate_reg)
+
+			STATE_UFM_IDLE : begin
+				if (avs_readreq_reg) begin
+					ufmstate_reg <= STATE_UFM_READ;
+				end
+			end
+
+			STATE_UFM_READ : begin
+				if (!ufm_waitreq_sig) begin
+					ufmstate_reg <= STATE_UFM_DATA;
+				end
+			end
+
+			STATE_UFM_DATA : begin
+				if (ufm_readdatavalid_sig) begin
+					ufmstate_reg <= STATE_UFM_DONE;
+					readdata_reg <= ufm_readdata_sig;
+				end
+			end
+
+			STATE_UFM_DONE : begin
+				if (!avs_readreq_reg) begin
+					ufmstate_reg <= STATE_UFM_IDLE;
+				end
+			end
+
+			endcase
+		end
+	end
 
 
 	// UFMモジュールインスタンス 
 
-	cerasite_ocflash u_ufm (
-		.reset_n					(~reset_sig),
-		.clock						(ufm_clk_sig),
-		.avmm_data_addr				(ufm_address_sig),
-		.avmm_data_read				(ufm_read_reg),
-		.avmm_data_readdata			(ufm_readdata_sig),
-		.avmm_data_waitrequest		(ufm_waitres_sig),
-		.avmm_data_readdatavalid	(ufm_readdatavalid_sig),
-		.avmm_data_burstcount		(2'd1)
+	cerasite_ocflash
+	u_ufm (
+		.clock						( ufm_clk_sig ),
+		.avmm_data_addr				( ufm_address_sig ),
+		.avmm_data_read				( ufm_read_sig ),
+		.avmm_data_readdata			( ufm_readdata_sig ),
+		.avmm_data_waitrequest		( ufm_waitreq_sig ),
+		.avmm_data_readdatavalid	( ufm_readdatavalid_sig ),
+		.avmm_data_burstcount		( 2'd1 ),
+		.reset_n					( ~reset_sig )
 	);
 
 
