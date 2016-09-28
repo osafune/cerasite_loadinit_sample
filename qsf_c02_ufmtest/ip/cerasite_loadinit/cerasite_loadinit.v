@@ -3,7 +3,7 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2016/09/19 -> 2016/09/19
-//   UPDATE : 2016/09/28
+//   UPDATE : 2016/09/29
 //
 // ===================================================================
 // *******************************************************************
@@ -110,6 +110,7 @@ module cerasite_loadinit (
 	reg				readreq_reg;
 	reg				imm32_reg;
 	reg				rep_reg;
+	reg  [5:0]		timercount_reg;
 	reg  [11:0]		wordaddr_reg;
 	reg  [15:0]		datacount_reg;
 	reg  [31:0]		data_reg;
@@ -150,6 +151,7 @@ module cerasite_loadinit (
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
 			state_reg <= STATE_START;
+			timercount_reg <= 6'd63;
 			readreq_reg <= 1'b0;
 			imm32_reg <= 1'b0;
 			rep_reg <= 1'b0;
@@ -159,9 +161,14 @@ module cerasite_loadinit (
 			case (state_reg)
 
 			STATE_START : begin
-				state_reg <= STATE_LOADCOUNT;
-				readreq_reg <= 1'b1;
-				wordaddr_reg <= 1'd0;
+				if (timercount_reg == 1'd0) begin
+					state_reg <= STATE_LOADCOUNT;
+					readreq_reg <= 1'b1;
+					wordaddr_reg <= 1'd0;
+				end
+				else begin
+					timercount_reg <= timercount_reg - 1'd1;
+				end
 			end
 
 			STATE_LOADCOUNT : begin

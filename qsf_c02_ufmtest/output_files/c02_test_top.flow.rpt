@@ -1,5 +1,5 @@
 Flow report for c02_test_top
-Wed Sep 28 04:19:32 2016
+Thu Sep 29 08:05:52 2016
 Quartus Prime Version 16.0.2 Build 222 07/20/2016 SJ Lite Edition
 
 
@@ -41,17 +41,17 @@ agreement for further details.
 +----------------------------------------------------------------------------------+
 ; Flow Summary                                                                     ;
 +------------------------------------+---------------------------------------------+
-; Flow Status                        ; Successful - Wed Sep 28 04:19:28 2016       ;
+; Flow Status                        ; Successful - Thu Sep 29 08:05:48 2016       ;
 ; Quartus Prime Version              ; 16.0.2 Build 222 07/20/2016 SJ Lite Edition ;
 ; Revision Name                      ; c02_test_top                                ;
 ; Top-level Entity Name              ; c02_test_top                                ;
 ; Family                             ; MAX 10                                      ;
 ; Device                             ; 10M02DCV36C8G                               ;
 ; Timing Models                      ; Final                                       ;
-; Total logic elements               ; 1,071 / 2,304 ( 46 % )                      ;
-;     Total combinational functions  ; 990 / 2,304 ( 43 % )                        ;
-;     Dedicated logic registers      ; 576 / 2,304 ( 25 % )                        ;
-; Total registers                    ; 576                                         ;
+; Total logic elements               ; 1,085 / 2,304 ( 47 % )                      ;
+;     Total combinational functions  ; 1,004 / 2,304 ( 44 % )                      ;
+;     Dedicated logic registers      ; 582 / 2,304 ( 25 % )                        ;
+; Total registers                    ; 582                                         ;
 ; Total pins                         ; 5 / 27 ( 19 % )                             ;
 ; Total virtual pins                 ; 0                                           ;
 ; Total memory bits                  ; 40,960 / 110,592 ( 37 % )                   ;
@@ -67,7 +67,7 @@ agreement for further details.
 +-------------------+---------------------+
 ; Option            ; Setting             ;
 +-------------------+---------------------+
-; Start date & time ; 09/28/2016 04:19:01 ;
+; Start date & time ; 09/29/2016 08:05:19 ;
 ; Main task         ; Compilation         ;
 ; Revision Name     ; c02_test_top        ;
 +-------------------+---------------------+
@@ -78,7 +78,7 @@ agreement for further details.
 +-------------------------------------+----------------------------------------------------------------+---------------+--------------+------------+
 ; Assignment Name                     ; Value                                                          ; Default Value ; Entity Name  ; Section Id ;
 +-------------------------------------+----------------------------------------------------------------+---------------+--------------+------------+
-; COMPILER_SIGNATURE_ID               ; 53849985591009.147500394106688                                 ; --            ; --           ; --         ;
+; COMPILER_SIGNATURE_ID               ; 53849985591009.147510391906820                                 ; --            ; --           ; --         ;
 ; MAX_CORE_JUNCTION_TEMP              ; 85                                                             ; --            ; --           ; --         ;
 ; MIN_CORE_JUNCTION_TEMP              ; 0                                                              ; --            ; --           ; --         ;
 ; MISC_FILE                           ; testmem_core/synthesis/../testmem_core.cmp                     ; --            ; --           ; --         ;
@@ -106,11 +106,11 @@ agreement for further details.
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name               ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis      ; 00:00:16     ; 1.0                     ; 908 MB              ; 00:00:32                           ;
-; Fitter                    ; 00:00:08     ; 1.3                     ; 1705 MB             ; 00:00:10                           ;
-; Assembler                 ; 00:00:01     ; 1.0                     ; 772 MB              ; 00:00:01                           ;
-; TimeQuest Timing Analyzer ; 00:00:03     ; 1.5                     ; 906 MB              ; 00:00:04                           ;
-; Total                     ; 00:00:28     ; --                      ; --                  ; 00:00:47                           ;
+; Analysis & Synthesis      ; 00:00:17     ; 1.0                     ; 926 MB              ; 00:00:32                           ;
+; Fitter                    ; 00:00:08     ; 1.3                     ; 1725 MB             ; 00:00:10                           ;
+; Assembler                 ; 00:00:02     ; 1.0                     ; 772 MB              ; 00:00:01                           ;
+; TimeQuest Timing Analyzer ; 00:00:04     ; 1.5                     ; 909 MB              ; 00:00:04                           ;
+; Total                     ; 00:00:31     ; --                      ; --                  ; 00:00:47                           ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 
